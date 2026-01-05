@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Boss Health Overlay</title>
+
+<style>
+html, body {
+    width: 1920px;
+    height: 1080px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+}
+
+#healthContainer {
+    position: absolute;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 26px;
+    background: #111;
+    border-radius: 100px;
+    border: 3px solid black;
+    overflow: hidden;
+}
+
+#healthBar {
+    width: 100%;
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg,#00ff00,#55ff55);
+    box-shadow: 0 0 18px rgba(0,255,0,.8);
+    transition: width .25s ease, box-shadow .25s ease;
+}
+
+#damageText {
+    position: absolute;
+    bottom: 180px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 56px;
+    font-weight: 900;
+    color: #fffa00;
+    text-shadow: 0 0 6px #fffa00, 0 0 12px #000;
+    opacity: 0;
+    transition: all .4s ease;
+    pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="healthContainer"><div id="healthBar"></div></div>
+<div id="damageText"></div>
+
+<script>
+let maxHealth = 100;
+let currentHealth = 100;
+
+updateHealthBar();
+
+function updateHealthBar() {
+    const bar = document.getElementById("healthBar");
+    const p = currentHealth / maxHealth;
+    bar.style.width = (p * 100) + "%";
+
+    if (p > 0.66) {
+        bar.style.background = "linear-gradient(90deg,#00ff00,#55ff55)";
+        bar.style.boxShadow = "0 0 18px rgba(0,255,0,.8)";
+    } else if (p > 0.33) {
+        bar.style.background = "linear-gradient(90deg,#ffff00,#ffee55)";
+        bar.style.boxShadow = "0 0 18px rgba(255,255,0,.8)";
+    } else {
+        bar.style.background = "linear-gradient(90deg,#ff0000,#ff5555)";
+        bar.style.boxShadow = "0 0 18px rgba(255,0,0,.8)";
+    }
+}
+
+function showDamage(amount, color, user) {
+    const el = document.getElementById("damageText");
+    el.innerText = user ? `${user} -${amount}` : `-${amount}`;
+    el.style.color = color || "#fffa00";
+    el.style.opacity = 1;
+    el.style.bottom = "210px";
+
+    setTimeout(() => {
+        el.style.opacity = 0;
+        el.style.bottom = "180px";
+    }, 600);
+}
+
+/* Mix It Up Message Listener */
+window.addEventListener("onEventReceived", function (event) {
+    const data = event.detail?.eventData;
+    if (!data || data.type !== "bossAttack") return;
+
+    currentHealth = Math.max(0, currentHealth - parseInt(data.damage));
+    updateHealthBar();
+    showDamage(data.damage, data.color || "#fffa00", data.user || "");
+});
+
+</script>
+
+</body>
+</html>
